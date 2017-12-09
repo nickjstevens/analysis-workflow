@@ -6,4 +6,4 @@ services:
       - "8888:8888"
     volumes:
       - .:/home/jovyan/work
-    container_name: my_jupyter
+    container_name: analysis-workflow

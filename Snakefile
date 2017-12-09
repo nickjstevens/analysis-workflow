@@ -2,8 +2,10 @@ configfile: "config.yaml"
 
 rule all:
     input:
-        expand("models/{loadcase}-post.out", loadcase=config["loadcases"])
- 
+        expand("models/{loadcase}-post.out", loadcase=config["loadcases"]),
+        "models/report.html",
+        'models/dag.png'
+
 rule run_analysis:
     input:
         geometry = 'models/model.inp',
@@ -36,6 +38,34 @@ rule dag:
 rule clean:
     shell:
         """
-        rm -f models/dag.png
-        rm -f models/*.out
+        rm $(snakemake --summary | tail -n+2 | cut -f1)
         """
+
+rule report:
+    input:
+        FILELIST = expand("models/{loadcase}-post.out", loadcase=config["loadcases"]),
+        DAG = 'models/dag.png'
+    output:
+        "models/report.html"
+    run:
+        from snakemake.utils import report
+        report("""
+        An example report by Nick Stevens, Tor Engineering Ltd.
+        =======================================================
+        Test report goes here. Author is **Nick Stevens**.
+
+        Inline math example: :math:`\sum_{{j \in E}} t_j \leq I`.
+
+        The Directed Acylic Graph (DAG) of the output is shown below:
+        
+        .. image:: dag.png
+        
+        Link to the image file: DAG_
+
+        Example of a block of math text:
+
+        .. math::
+
+            |cq_{{0ctrl}}^i - cq_{{nt}}^i| > 0.5
+
+        """, output[0], metadata="Nick Stevens (nick@tor-eng.com)", **input)
